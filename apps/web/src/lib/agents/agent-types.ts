@@ -7,5 +7,6 @@ export interface AgentInfo {
   cwd: string
   startedAt: string
   status: AgentStatus
+  sessionId?: string
   exitCode?: number
 }

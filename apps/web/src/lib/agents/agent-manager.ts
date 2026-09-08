@@ -5,6 +5,12 @@ import type { AgentInfo } from './agent-types'
 
 const MAX_OUTPUT = 250_000
 
+type StartOptions = {
+  cwd?: string
+  command?: string
+  sessionId?: string
+}
+
 class AgentManager {
   private readonly agents = new Map<string, { info: AgentInfo; terminal: pty.IPty; output: string }>()
 
@@ -12,10 +18,11 @@ class AgentManager {
     return [...this.agents.values()].map(({ info }) => ({ ...info }))
   }
 
-  start(cwd = process.cwd(), command = 'claude'): AgentInfo {
+  start(options: StartOptions = {}): AgentInfo {
+    const { cwd = process.cwd(), command = 'claude', sessionId } = options
     const id = randomUUID()
     const shell = os.platform() === 'win32' ? 'powershell.exe' : process.env.SHELL || '/bin/bash'
-    const args = os.platform() === 'win32' ? [] : ['-lc', command]
+    const args = os.platform() === 'win32' ? ['-NoExit', '-Command', command] : ['-lc', command]
     const terminal = pty.spawn(shell, args, {
       name: 'xterm-256color',
       cols: 120,
@@ -31,6 +38,7 @@ class AgentManager {
       cwd,
       startedAt: new Date().toISOString(),
       status: 'running',
+      ...(sessionId ? { sessionId } : {}),
     }
 
     const entry = { info, terminal, output: '' }

@@ -1,36 +1,15 @@
 {
   "name": "claude-session-dashboard",
-  "version": "0.5.1",
-  "description": "Local observability dashboard for Claude Code sessions",
+  "version": "0.6.0",
+  "description": "Local Claude Code command center and session observability dashboard",
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/dlupiak/claude-session-dashboard",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/dlupiak/claude-session-dashboard.git"
-  },
-  "keywords": [
-    "claude",
-    "claude-code",
-    "dashboard",
-    "session",
-    "observability",
-    "ai",
-    "anthropic"
-  ],
-  "engines": {
-    "node": ">=18.0.0"
-  },
-  "bin": {
-    "claude-dashboard": "bin/cli.mjs",
-    "claude-session-dashboard": "bin/cli.mjs"
-  },
-  "files": [
-    "bin/",
-    "dist/",
-    "LICENSE",
-    "README.md"
-  ],
+  "repository": { "type": "git", "url": "git+https://github.com/dlupiak/claude-session-dashboard.git" },
+  "keywords": ["claude", "claude-code", "dashboard", "terminal", "agents", "observability"],
+  "engines": { "node": ">=18.0.0" },
+  "bin": { "claude-dashboard": "bin/cli.mjs", "claude-session-dashboard": "bin/cli.mjs" },
+  "files": ["bin/", "dist/", "LICENSE", "README.md"],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -51,14 +30,13 @@
     "@tanstack/react-router": "^1.159.5",
     "@tanstack/react-start": "^1.159.5",
     "date-fns": "^4.1.0",
+    "node-pty": "^1.1.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "recharts": "^3.7.0",
     "zod": "^4.3.6"
   },
-  "overrides": {
-    "picomatch": "^4.0.0"
-  },
+  "overrides": { "picomatch": "^4.0.0" },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@playwright/test": "^1.58.2",
@@ -71,7 +49,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
     "eslint": "^9.39.2",
-    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-hooks": "^7.0.0",
     "eslint-plugin-react-refresh": "^0.5.0",
     "happy-dom": "^20.6.1",
     "jsdom": "^29.0.0",

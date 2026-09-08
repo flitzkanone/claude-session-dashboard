@@ -2,12 +2,17 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import { getProjectsDir } from '../utils/claude-path'
 
-const ACTIVE_THRESHOLD_MS = 120_000 // 2 minutes
+// Claude Code can keep a session alive without the lock directory being
+// present in the exact shape expected by the old detector. A recently
+// modified JSONL file is the most reliable signal available to the dashboard.
+const ACTIVE_THRESHOLD_MS = 5 * 60_000
 
 /**
- * Check if a session is active by examining:
- * 1. mtime of the JSONL file (within last 2 minutes)
- * 2. Existence of a lock directory (session ID without .jsonl extension)
+ * Check whether a Claude Code session is currently active.
+ *
+ * We deliberately do not require a lock directory: that made genuinely
+ * running sessions disappear from the dashboard depending on Claude Code's
+ * internal locking behaviour.
  */
 export async function isSessionActive(
   projectDirName: string,
@@ -16,16 +21,9 @@ export async function isSessionActive(
 ): Promise<boolean> {
   const projectsDir = projectsDirOverride ?? getProjectsDir()
   const jsonlPath = path.join(projectsDir, projectDirName, `${sessionId}.jsonl`)
-  const lockDirPath = path.join(projectsDir, projectDirName, sessionId)
 
-  // Check mtime
   const stat = await fs.promises.stat(jsonlPath).catch(() => null)
   if (!stat) return false
 
-  const age = Date.now() - stat.mtimeMs
-  if (age > ACTIVE_THRESHOLD_MS) return false
-
-  // Also check for lock directory existence
-  const lockStat = await fs.promises.stat(lockDirPath).catch(() => null)
-  return lockStat?.isDirectory() ?? false
+  return Date.now() - stat.mtimeMs <= ACTIVE_THRESHOLD_MS
 }

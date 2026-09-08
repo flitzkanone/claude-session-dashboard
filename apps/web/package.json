@@ -1,6 +1,6 @@
 {
   "name": "claude-session-dashboard",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "Local Claude Code command center and session observability dashboard",
   "type": "module",
   "license": "MIT",
@@ -29,6 +29,7 @@
     "@tanstack/react-query": "^5.75.0",
     "@tanstack/react-router": "^1.159.5",
     "@tanstack/react-start": "^1.159.5",
+    "@xterm/xterm": "^5.3.0",
     "date-fns": "^4.1.0",
     "node-pty": "^1.1.0",
     "react": "^19.1.0",
@@ -45,7 +46,6 @@
     "@types/node": "^25.2.3",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
-    "@vitejs/plugin-react": "^5.1.0",
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "^4.0.18",
     "eslint": "^9.39.2",

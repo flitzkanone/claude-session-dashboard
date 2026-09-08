@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
 import { sessionDetailQuery } from '@/features/session-detail/session-detail.queries'
 import { TimelineEventsChart } from '@/features/session-detail/timeline-chart'
 import { ContextWindowPanel } from '@/features/session-detail/ContextWindowPanel'
@@ -16,6 +17,8 @@ import { sessionToJSON, downloadFile } from '@/lib/utils/export-utils'
 import { ExportDropdown } from '@/components/ExportDropdown'
 import { SessionIdDisplay } from '@/features/session-detail/SessionIdDisplay'
 import { usePrivacy } from '@/features/privacy/PrivacyContext'
+import { getAgents, startAgent, stopAgent } from '@/features/agents/agents.api'
+import { AgentTerminal } from '@/features/agents/AgentTerminal'
 import { z } from 'zod'
 
 const searchSchema = z.object({
@@ -30,6 +33,7 @@ export const Route = createFileRoute('/_dashboard/sessions/$sessionId')({
 function SessionDetailPage() {
   const { sessionId } = Route.useParams()
   const { project = '' } = Route.useSearch()
+  const [terminalAgentId, setTerminalAgentId] = useState<string | null>(null)
 
   const { privacyMode, anonymizeProjectName, anonymizeBranch } = usePrivacy()
   const isActive = useIsSessionActive(sessionId)
@@ -37,6 +41,36 @@ function SessionDetailPage() {
   const { data: detail, isLoading, error } = useQuery(
     sessionDetailQuery(sessionId, project, isActive),
   )
+  const { data: agents = [] } = useQuery({
+    queryKey: ['agents'],
+    queryFn: () => getAgents(),
+    refetchInterval: 1000,
+  })
+
+  useEffect(() => {
+    const existing = agents.find((agent) => agent.sessionId === sessionId && agent.status === 'running')
+    if (existing) setTerminalAgentId(existing.id)
+  }, [agents, sessionId])
+
+  const startTerminal = useMutation({
+    mutationFn: () =>
+      startAgent({
+        data: {
+          cwd: project || undefined,
+          command: `claude --resume ${sessionId}`,
+          sessionId,
+        },
+      }),
+    onSuccess: (agent) => setTerminalAgentId(agent.id),
+  })
+
+  const stopTerminal = useMutation({
+    mutationFn: () => {
+      if (!terminalAgentId) throw new Error('No terminal agent')
+      return stopAgent({ data: { id: terminalAgentId } })
+    },
+    onSuccess: () => setTerminalAgentId(null),
+  })
 
   if (isLoading) {
     return (
@@ -157,6 +191,45 @@ function SessionDetailPage() {
 
       <div className="mt-4">
         <ErrorPanel errors={detail.errors} />
+      </div>
+
+      {/* Live Claude terminal */}
+      <div className="mt-6">
+        <div className="mb-3 flex items-center justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-gray-300">Live terminal</h2>
+            <p className="mt-1 text-xs text-gray-500">
+              Interactive Claude Code PTY with the same session context. Ctrl+O output is shown live.
+            </p>
+          </div>
+          {terminalAgentId ? (
+            <button
+              type="button"
+              onClick={() => stopTerminal.mutate()}
+              disabled={stopTerminal.isPending}
+              className="rounded-md border border-gray-700 px-3 py-1.5 text-xs text-gray-300 hover:bg-gray-900 disabled:opacity-50"
+            >
+              Stop terminal
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => startTerminal.mutate()}
+              disabled={startTerminal.isPending}
+              className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-500 disabled:opacity-50"
+            >
+              {startTerminal.isPending ? 'Starting…' : 'Open terminal'}
+            </button>
+          )}
+        </div>
+
+        {terminalAgentId ? (
+          <AgentTerminal agentId={terminalAgentId} height={460} />
+        ) : (
+          <div className="rounded-lg border border-dashed border-gray-800 bg-gray-950/50 px-5 py-10 text-center text-xs text-gray-500">
+            Open the terminal to resume this Claude session interactively.
+          </div>
+        )}
       </div>
 
       {/* Timeline Events Chart */}

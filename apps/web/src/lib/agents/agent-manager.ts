@@ -1,10 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import * as os from 'node:os'
 import * as pty from 'node-pty'
-import type { AgentInfo, AgentStatus } from './agent-types'
+import type { AgentInfo } from './agent-types'
+
+const MAX_OUTPUT = 250_000
 
 class AgentManager {
-  private readonly agents = new Map<string, { info: AgentInfo; terminal: pty.IPty }>()
+  private readonly agents = new Map<string, { info: AgentInfo; terminal: pty.IPty; output: string }>()
 
   list(): AgentInfo[] {
     return [...this.agents.values()].map(({ info }) => ({ ...info }))
@@ -31,6 +33,10 @@ class AgentManager {
       status: 'running',
     }
 
+    const entry = { info, terminal, output: '' }
+    terminal.onData((data) => {
+      entry.output = (entry.output + data).slice(-MAX_OUTPUT)
+    })
     terminal.onExit(({ exitCode }) => {
       const current = this.agents.get(id)
       if (current) {
@@ -39,8 +45,14 @@ class AgentManager {
       }
     })
 
-    this.agents.set(id, { info, terminal })
+    this.agents.set(id, entry)
     return { ...info }
+  }
+
+  readOutput(id: string, offset = 0) {
+    const entry = this.require(id)
+    const safeOffset = Math.max(0, Math.min(offset, entry.output.length))
+    return { data: entry.output.slice(safeOffset), nextOffset: entry.output.length }
   }
 
   write(id: string, input: string) {
@@ -56,10 +68,6 @@ class AgentManager {
     const agent = this.require(id)
     agent.terminal.kill()
     agent.info.status = 'stopped'
-  }
-
-  onData(id: string, listener: (data: string) => void) {
-    return this.require(id).terminal.onData(listener)
   }
 
   private require(id: string) {

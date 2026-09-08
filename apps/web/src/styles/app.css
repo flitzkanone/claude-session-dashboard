@@ -42,8 +42,32 @@
   --color-gray-950: #f5f3ec;
 }
 
+html {
+  min-width: 320px;
+  overflow-x: hidden;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
+  min-width: 320px;
+  min-height: 100dvh;
+  overflow-x: hidden;
   background-color: var(--color-gray-950);
   color: var(--color-gray-100);
   transition: background-color 150ms ease, color 150ms ease;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (max-width: 767px) {
+  button,
+  a[role='button'] {
+    touch-action: manipulation;
+  }
 }

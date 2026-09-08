@@ -12,7 +12,10 @@ type StartOptions = {
 }
 
 class AgentManager {
-  private readonly agents = new Map<string, { info: AgentInfo; terminal: pty.IPty; output: string }>()
+  private readonly agents = new Map<
+    string,
+    { info: AgentInfo; terminal: pty.IPty; output: string; outputBase: number }
+  >()
 
   list(): AgentInfo[] {
     return [...this.agents.values()].map(({ info }) => ({ ...info }))
@@ -41,9 +44,14 @@ class AgentManager {
       ...(sessionId ? { sessionId } : {}),
     }
 
-    const entry = { info, terminal, output: '' }
+    const entry = { info, terminal, output: '', outputBase: 0 }
     terminal.onData((data) => {
-      entry.output = (entry.output + data).slice(-MAX_OUTPUT)
+      entry.output += data
+      if (entry.output.length > MAX_OUTPUT) {
+        const removed = entry.output.length - MAX_OUTPUT
+        entry.output = entry.output.slice(removed)
+        entry.outputBase += removed
+      }
     })
     terminal.onExit(({ exitCode }) => {
       const current = this.agents.get(id)
@@ -59,8 +67,10 @@ class AgentManager {
 
   readOutput(id: string, offset = 0) {
     const entry = this.require(id)
-    const safeOffset = Math.max(0, Math.min(offset, entry.output.length))
-    return { data: entry.output.slice(safeOffset), nextOffset: entry.output.length }
+    const absoluteEnd = entry.outputBase + entry.output.length
+    const safeOffset = Math.max(entry.outputBase, Math.min(offset, absoluteEnd))
+    const localOffset = safeOffset - entry.outputBase
+    return { data: entry.output.slice(localOffset), nextOffset: absoluteEnd }
   }
 
   write(id: string, input: string) {

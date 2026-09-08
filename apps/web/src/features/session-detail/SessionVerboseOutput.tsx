@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import ReactMarkdown from 'react-markdown'
 import { getSessionVerboseOutput } from './session-detail.api'
 
 interface SessionVerboseOutputProps {
@@ -9,6 +10,14 @@ interface SessionVerboseOutputProps {
 function formatTime(timestamp: string) {
   const date = new Date(timestamp)
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleTimeString()
+}
+
+function ActivityMarkdown({ text }: { text: string }) {
+  return (
+    <div className="min-w-0 text-gray-300 [&_a]:text-brand-300 [&_a]:underline [&_code]:rounded [&_code]:bg-gray-900 [&_code]:px-1 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-gray-200 [&_h1]:mb-2 [&_h1]:text-base [&_h1]:font-bold [&_h2]:mb-2 [&_h2]:text-sm [&_h2]:font-bold [&_h3]:mb-1 [&_h3]:text-xs [&_h3]:font-bold [&_li]:ml-4 [&_li]:list-disc [&_ol]:my-1 [&_p]:mb-1 [&_strong]:font-bold [&_ul]:my-1">
+      <ReactMarkdown>{text}</ReactMarkdown>
+    </div>
+  )
 }
 
 export function SessionVerboseOutput({
@@ -59,14 +68,12 @@ export function SessionVerboseOutput({
               key={`${entry.timestamp}-${index}`}
               className="rounded-md px-2 py-1.5 hover:bg-gray-900"
             >
-              <div className="flex gap-2">
+              <div className="flex items-start gap-2">
                 <span className="shrink-0 text-gray-700">
                   {formatTime(entry.timestamp)}
                 </span>
-                <span className="shrink-0 text-gray-500">{entry.kind}</span>
-                <span className="min-w-0 whitespace-pre-wrap break-words text-gray-300">
-                  {entry.text}
-                </span>
+                <span className="shrink-0 pt-0.5 text-gray-500">{entry.kind}</span>
+                <ActivityMarkdown text={entry.text} />
               </div>
             </div>
           ))}

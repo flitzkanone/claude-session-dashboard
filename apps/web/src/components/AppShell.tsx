@@ -17,14 +17,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data: appInfo } = useQuery(appInfoQuery)
 
   return (
-    <div className="flex min-h-screen">
-      <aside className="flex w-56 shrink-0 flex-col border-r border-gray-800 bg-gray-950">
-        <div className="flex h-14 items-center border-b border-gray-800 px-4">
+    <div className="min-h-screen bg-gray-950">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-56 flex-col border-r border-gray-800 bg-gray-950 md:flex">
+        <div className="flex h-14 shrink-0 items-center border-b border-gray-800 px-4">
           <Link to="/agents" className="text-sm font-bold text-gray-100">
             <span className="text-brand-500">Claude</span> Command Center
           </Link>
         </div>
-        <nav className="flex-1 p-3">
+        <nav className="flex-1 overflow-y-auto p-3">
           {NAV_ITEMS.map((item) => {
             const isActive = currentPath.startsWith(item.to)
             return (
@@ -43,9 +43,32 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </aside>
-      <main className="flex-1 overflow-auto">
-        <div className="mx-auto max-w-6xl px-6 py-6">{children}</div>
+
+      <main className="min-h-screen md:ml-56">
+        <header className="sticky top-0 z-30 flex h-14 items-center border-b border-gray-800/80 bg-gray-950/95 px-4 backdrop-blur md:hidden">
+          <Link to="/agents" className="text-sm font-bold text-gray-100">
+            <span className="text-brand-500">Claude</span> Command Center
+          </Link>
+        </header>
+        <div className="mx-auto w-full max-w-6xl px-4 py-5 pb-24 sm:px-5 sm:py-6 md:px-6 md:pb-6">
+          {children}
+        </div>
       </main>
+
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-gray-800 bg-gray-950/95 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-1.5 backdrop-blur md:hidden">
+        <div className="mx-auto flex max-w-md items-stretch justify-around">
+          {NAV_ITEMS.map((item) => {
+            const isActive = currentPath.startsWith(item.to)
+            return (
+              <Link key={item.to} to={item.to} className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-[11px] transition-colors ${isActive ? 'text-brand-400' : 'text-gray-500'}`}>
+                <span className="text-base leading-5">{item.icon}</span>
+                <span className="truncate">{item.label}</span>
+                {item.to === '/sessions' && <ActiveSessionsBadge />}
+              </Link>
+            )
+          })}
+        </div>
+      </nav>
     </div>
   )
 }

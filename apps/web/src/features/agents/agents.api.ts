@@ -26,3 +26,14 @@ export const writeAgent = createServerFn({ method: 'POST' })
     agentManager.write(data.id, data.input)
     return { ok: true }
   })
+
+export const getAgentOutput = createServerFn({ method: 'GET' })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid(), offset: z.number().int().nonnegative().default(0) }).parse(input))
+  .handler(({ data }) => agentManager.readOutput(data.id, data.offset))
+
+export const resizeAgent = createServerFn({ method: 'POST' })
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid(), cols: z.number().int().positive(), rows: z.number().int().positive() }).parse(input))
+  .handler(({ data }) => {
+    agentManager.resize(data.id, data.cols, data.rows)
+    return { ok: true }
+  })

@@ -8,7 +8,12 @@ export default defineConfig({
   server: {
     port: 3000,
     watch: {
-      ignored: ['**/routeTree.gen.ts'],
+      ignored: [
+        '**/routeTree.gen.ts',
+        '**/.tanstack/**',
+        '**/node_modules/.vite/**',
+        '**/node_modules/.vite-temp/**',
+      ],
     },
   },
   plugins: [
